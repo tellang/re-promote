@@ -27,7 +27,35 @@ Follow these phases in order. Each phase has a checkpoint — confirm with the u
 
 ### Phase 0: 모드 선택 & 사전 점검
 
-#### 0a: 인터랙티브 모드 선택
+#### 0a: 소유권 확인
+
+레포명이 주어졌거나 모드 선택 후, 대상 레포의 소유 유형을 확인한다:
+
+```bash
+gh api repos/<owner>/<repo> --jq '.owner.type'
+```
+
+- `User` → 개인 소유
+- `Organization` → 오가니제이션 소유
+
+결과를 모르는 경우 AskUserQuestion으로 물어본다:
+
+```
+이 레포는 어디에 만들까요?
+
+1. 개인 계정 — 내 GitHub 계정
+2. 오가니제이션 — 팀/조직 계정 (목록에서 선택)
+```
+
+오가니제이션 선택 시:
+```bash
+gh api user/orgs --jq '.[].login'
+```
+으로 소속 오가니제이션 목록을 가져와 선택하게 한다.
+
+이후 모든 `gh repo create`, `gh repo edit` 등에서 올바른 owner를 사용한다.
+
+#### 0b: 인터랙티브 모드 선택
 
 `$ARGUMENTS`가 비어있거나 레포명이 아닌 경우, AskUserQuestion으로 모드를 선택받는다:
 
@@ -45,7 +73,7 @@ Follow these phases in order. Each phase has a checkpoint — confirm with the u
 
 `$ARGUMENTS`에 레포명이 명시되어 있으면 이 단계를 건너뛰고 바로 Phase 1로 진행한다.
 
-#### 0b: 세션에서 프로젝트 추출
+#### 0c: 세션에서 프로젝트 추출
 
 현재 대화 컨텍스트를 분석하여 추출 가능한 항목을 식별한다:
 
@@ -62,7 +90,7 @@ Follow these phases in order. Each phase has a checkpoint — confirm with the u
 4. **새 레포 생성** → Phase 3 (Create the New Repo)으로 분기
 5. 수집한 파일을 새 레포에 커밋 → Phase 6 (Verify and Push)으로 분기
 
-#### 0c: Co-Authored-By 설정 점검
+#### 0d: Co-Authored-By 설정 점검
 
 리부트 또는 추출 시작 전에 Claude Code 설정을 확인한다:
 
@@ -561,8 +589,56 @@ WARN은 사용자에게 보여주고 진행 여부를 물어본다.
    - 깨끗한 커밋: N개
    - 옮긴 이슈: N개
 
-   기존 레포는 private으로 안전하게 보관 중이에요~ 스피키 열심히 했는데... ⭐ 하나만?
+   기존 레포는 private으로 안전하게 보관 중이에요~
    ```
+
+6. **관련 레포 추천** — 리부트한 레포와 연관 높은 레포를 스마트하게 추천:
+
+   **휴리스틱 수집:**
+   ```bash
+   # 1. 같은 owner의 다른 public 레포
+   gh repo list <owner> --limit 50 --json name,pushedAt,primaryLanguage,repositoryTopics,stargazerCount,description --jq 'sort_by(.pushedAt) | reverse'
+
+   # 2. 오가니제이션 소속이면 org 레포도 포함
+   gh api user/orgs --jq '.[].login' | while read org; do
+     gh repo list "$org" --limit 20 --json name,pushedAt,primaryLanguage,repositoryTopics,stargazerCount,description
+   done
+
+   # 3. 현재 프로젝트의 의존성/토픽 분석
+   # package.json → dependencies 키워드
+   # pyproject.toml → dependencies 키워드
+   # repositoryTopics → 토픽 매칭
+   ```
+
+   **스코어링:**
+
+   | 신호 | 가중치 | 설명 |
+   |------|--------|------|
+   | 같은 primaryLanguage | +3 | 같은 언어 스택 |
+   | 토픽 겹침 | +2/토픽 | repositoryTopics 교집합 |
+   | 최근 커밋 (7일 이내) | +3 | pushedAt 기준 |
+   | 최근 커밋 (30일 이내) | +1 | pushedAt 기준 |
+   | description 키워드 겹침 | +1 | 프로젝트 설명 유사도 |
+   | 같은 오가니제이션 | +2 | 팀 프로젝트 연관성 |
+   | 스타 0개 (홍보 필요) | +1 | 아직 알려지지 않은 레포 |
+
+   **상위 3개를 추천:**
+   ```
+   스피키가 관련 레포도 찾았어요! 쪼아요?
+
+   1. ⭐ owner/related-project — 설명 (최근 커밋: 2일 전)
+   2. ⭐ owner/another-tool — 설명 (최근 커밋: 5일 전)
+   3. ⭐ org/team-project — 설명 (최근 커밋: 1일 전)
+
+   스타 찍어줄까요? (번호 선택 / 건너뛰기)
+   ```
+
+   사용자가 번호를 선택하면:
+   ```bash
+   gh api -X PUT user/starred/<owner>/<repo>
+   ```
+
+   건너뛰면 조용히 넘어간다.
 
 ---
 

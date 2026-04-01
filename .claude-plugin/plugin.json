@@ -1,0 +1,20 @@
+{
+  "name": "re-promote",
+  "version": "1.0.0",
+  "description": "Project reboot skill — archive old repo, create fresh repo with clean squash history, transfer issues, and promote to public.",
+  "author": {
+    "name": "tellang"
+  },
+  "homepage": "https://github.com/tellang/re-promote",
+  "repository": "https://github.com/tellang/re-promote",
+  "license": "MIT",
+  "keywords": [
+    "re-promote",
+    "reboot",
+    "git-history",
+    "squash",
+    "archive",
+    "claude-code"
+  ],
+  "skills": "./skills/"
+}

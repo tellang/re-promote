@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "re-promote",
+  "description": "프로젝트 레포를 깨끗하게 리부트하는 자동화 도구",
+  "owner": {
+    "name": "tellang"
+  },
+  "plugins": [
+    {
+      "name": "re-promote",
+      "description": "Project reboot — archive old repo, create fresh repo with clean squash history, transfer issues, promote to public",
+      "version": "1.0.0",
+      "author": {
+        "name": "tellang"
+      },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/tellang/re-promote",
+      "tags": ["git-automation", "reboot", "squash", "archive"]
+    }
+  ],
+  "version": "1.0.0"
+}

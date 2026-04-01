@@ -1,6 +1,6 @@
 {
   "name": "re-promote",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Project reboot skill — archive old repo, create fresh repo with clean squash history, transfer issues, and promote to public.",
   "author": {
     "name": "tellang"

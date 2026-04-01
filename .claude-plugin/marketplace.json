@@ -9,7 +9,7 @@
     {
       "name": "re-promote",
       "description": "Project reboot — archive old repo, create fresh repo with clean squash history, transfer issues, promote to public",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "tellang"
       },
@@ -19,5 +19,5 @@
       "tags": ["git-automation", "reboot", "squash", "archive"]
     }
   ],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
